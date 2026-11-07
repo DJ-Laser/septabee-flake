@@ -1,16 +1,16 @@
 let
-  latest = "B_T24";
-  latest_offline = "B_T24_offline";
+  latest = "B_T25";
+  latest_offline = "B_T25_offline";
 
   versions = {
-    # "B_T25" = {
-    #   hash = "sha256-YWqgNIj2hMgyO5LZQl8G6CXbvOffbNJ7PEOCL9DxfNE=";
-    #   package = ./packages/septabee_T25-latest.nix;
-    # };
-    # "B_T25_offline" = {
-    #   hash = "sha256-5Bp0P+Sr1SKrbjiatbugaAKSoIGOHVdqznOZxl2/AaM=";
-    #   package = ./packages/septabee_T25-latest.nix;
-    # };
+    "B_T25" = {
+      hash = "sha256-YWqgNIj2hMgyO5LZQl8G6CXbvOffbNJ7PEOCL9DxfNE=";
+      package = ./packages/septabee_T25-latest.nix;
+    };
+    "B_T25_offline" = {
+      hash = "sha256-5Bp0P+Sr1SKrbjiatbugaAKSoIGOHVdqznOZxl2/AaM=";
+      package = ./packages/septabee_T25-latest.nix;
+    };
     "B_T24" = {
       hash = "sha256-fsFsoqqp/jBWemhhc1V8ZNbQ3Vjz+8iXFAvHXblZyaM=";
       package = ./packages/septabee_T1-T24.nix;

@@ -1,78 +1,72 @@
 {
   lib,
-  fetchurl,
-  pipewire,
-  vulkan-loader,
-  wayland,
-  libxkbcommon,
-  p7zip,
-  autoPatchelfHook,
-  libpng,
-  freetype,
-  libx11,
   stdenv,
-  lilv,
-  zstd,
-  ncurses,
+  fetchurl,
+  p7zip,
   callPackage,
+  buildFHSEnv,
+  writeScript,
   wayland-deps ? true,
   version,
   download-hash,
   package-meta,
-}:
-stdenv.mkDerivation {
-  name = "septabee-${version}";
-  version = version;
-  src = fetchurl {
-    url = "https://downloads.septabee.com/SEPTABEE_DOWNLOADS/septabee_linux_${version}.7z";
-    sha256 = download-hash;
+}: let
+  septabee-unpacked = stdenv.mkDerivation {
+    pname = "septabee-unpacked";
+    inherit version;
+
+    src = fetchurl {
+      url = "https://downloads.septabee.com/SEPTABEE_DOWNLOADS/septabee_linux_${version}.7z";
+      sha256 = download-hash;
+    };
+
+    nativeBuildInputs = [p7zip];
+
+    unpackPhase = ''
+      runHook preUnpack
+      7z x "$src"
+      runHook postUnpack
+    '';
+
+    installPhase = ''
+      mkdir -p "$out/"
+      cp -r ./linux/* "$out/"
+    '';
   };
+in
+  buildFHSEnv {
+    pname = "septabee";
+    inherit version;
 
-  runtimeDependencies =
-    [
-      pipewire
-      vulkan-loader
-    ]
-    ++ (lib.optionals wayland-deps [
-      wayland
-      # kdePackages.wayland # Not sure if this is a hard requirement. cannot test myself
-      libxkbcommon
-    ]);
+    targetPkgs = pkgs:
+      with pkgs;
+        [
+          pipewire
+          vulkan-loader
+          libpng
+          freetype
+          libx11
+          lilv
+          zstd
+          ncurses
+          glibc
+          bash
+        ]
+        ++ (lib.optionals wayland-deps [
+          wayland
+          libxkbcommon
+        ]);
 
-  nativeBuildInputs = [
-    p7zip
-    autoPatchelfHook
-  ];
+    runScript = writeScript "run-septabee.sh" ''
+      #!/bin/bash
+      cd "${septabee-unpacked}/"
+      exec ./septabee "$@"
+    '';
 
-  buildInputs = [
-    libpng
-    vulkan-loader
-    freetype
-    pipewire
-    libx11
-    stdenv.cc.cc.lib
-    lilv
-    zstd
-    ncurses
-  ];
+    extraInstallCommands = ''
+      mkdir -p "$out/share"
+      cp -r ${callPackage ./septabee-desktop-entry.nix {}}/share/ "$out/"
+    '';
 
-  unpackPhase = ''
-    runHook preUnpack
-    7z x "$src"
-    runHook postUnpack
-  '';
-
-  installPhase = ''
-    runHook preInstall
-    mkdir -p "$out/bin"
-    cp -r ./linux/* "$out/bin/"
-    cp -r "$desktopItems/share" "$out"
-    runHook postInstall
-  '';
-
-  desktopItems = [
-    (callPackage ./septabee-desktop-entry.nix {})
-  ];
-
-  meta = package-meta;
-}
+    meta = package-meta;
+  }
